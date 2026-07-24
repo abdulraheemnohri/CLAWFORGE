@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  clawforge:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: clawforge-runtime
+    ports:
+      - "3777:3777"
+      - "5173:5173"
+    environment:
+      - NODE_ENV=production
+      - SERVER_PORT=3777
+      - SERVER_HOST=0.0.0.0
+      - DATABASE_URL=/app/data/clawforge.db
+    volumes:
+      - clawforge-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  clawforge-data:
+    driver: local
