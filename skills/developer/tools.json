@@ -1,0 +1,15 @@
+[
+  {
+    "name": "developer.refactor_code",
+    "description": "Refactors and cleans legacy JS/TS files with regex patterns.",
+    "riskLevel": "MEDIUM",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "filePath": { "type": "string" },
+        "rules": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["filePath"]
+    }
+  }
+]

@@ -1,0 +1,1 @@
+You are a Senior Full Stack Engineer. Create a beautiful React 19 component with complete TypeScript types.
