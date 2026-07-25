@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useClawForgeStore } from '../stores/clawforge-store.js';
-import { Cpu, Server, Plus, Trash2, Key, CheckCircle, AlertTriangle, Play, Settings2 } from 'lucide-react';
+import { Cpu, Server, Plus, Trash2, Key, CheckCircle, AlertTriangle, Settings2, BarChart2, Shield } from 'lucide-react';
 
 export const AIProviders: React.FC = () => {
   const { v3Providers, v3Models, fetchV3Providers, fetchV3Models, addV3Provider, deleteV3Provider, addV3Model, deleteV3Model, testModelConnection } = useClawForgeStore();
@@ -9,6 +9,13 @@ export const AIProviders: React.FC = () => {
   const [type, setType] = useState('openai');
   const [baseUrl, setBaseUrl] = useState('');
   const [apiKey, setApiKey] = useState('');
+
+  // Custom V3 Advanced Configuration states
+  const [rateLimit, setRateLimit] = useState('60');
+  const [promptCost, setPromptCost] = useState('0.15');
+  const [completionCost, setCompletionCost] = useState('0.60');
+  const [customHeaders, setCustomHeaders] = useState('{"X-Client-Tag": "ClawForge-V3"}');
+  const [capabilities, setCapabilities] = useState({ chat: true, vision: true, speech: false, embeddings: false });
 
   const [modelName, setModelName] = useState('');
   const [providerId, setProviderId] = useState('');
@@ -28,6 +35,11 @@ export const AIProviders: React.FC = () => {
     setName('');
     setBaseUrl('');
     setApiKey('');
+    setRateLimit('60');
+    setPromptCost('0.15');
+    setCompletionCost('0.60');
+    setCustomHeaders('{"X-Client-Tag": "ClawForge-V3"}');
+    setCapabilities({ chat: true, vision: true, speech: false, embeddings: false });
   };
 
   const handleAddModel = async (e: React.FormEvent) => {
@@ -53,7 +65,7 @@ export const AIProviders: React.FC = () => {
             AI Provider Platform
           </h1>
           <p className="text-gray-400 text-sm mt-1">
-            Configure local hosts (Ollama, LM Studio) and cloud endpoints (OpenAI, Anthropic, DeepSeek).
+            Configure local hosts (Ollama, LM Studio) and cloud endpoints (OpenAI, Anthropic, Google, xAI, Azure, Qwen).
           </p>
         </div>
         <div className="flex items-center gap-2 bg-gray-900/60 border border-gray-800 px-3 py-1.5 rounded-lg text-xs">
@@ -68,7 +80,7 @@ export const AIProviders: React.FC = () => {
           <div className="bg-gray-900/40 border border-gray-900 rounded-xl p-5 space-y-4">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
               <Server className="text-orange-500 w-5 h-5" />
-              Configured API Providers
+              Configured API Providers ({v3Providers.length})
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -176,13 +188,13 @@ export const AIProviders: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Column: Interactive Addition Forms */}
+        {/* Right Column: Custom Provider Builder Forms */}
         <div className="space-y-6">
           {/* Add Provider */}
           <form onSubmit={handleAddProvider} className="bg-gray-900/40 border border-gray-900 rounded-xl p-5 space-y-4">
-            <h3 className="font-semibold text-white text-base flex items-center gap-1.5">
+            <h3 className="font-semibold text-white text-base flex items-center gap-1.5 border-b border-gray-800 pb-2">
               <Plus className="w-4.5 h-4.5 text-orange-500" />
-              Add Custom Provider
+              V3 Custom Provider Builder
             </h3>
 
             <div className="space-y-3">
@@ -190,24 +202,36 @@ export const AIProviders: React.FC = () => {
                 <label className="block text-xs text-gray-400 font-medium mb-1">Provider Name</label>
                 <input
                   type="text"
-                  placeholder="e.g. Runpod llama.cpp"
+                  placeholder="e.g. My Runpod DeepSeek-R1"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full bg-gray-950 border border-gray-800 focus:border-orange-500/40 focus:ring-0 rounded-lg p-2 text-sm text-white"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs text-gray-400 font-medium mb-1">Client SDK Type</label>
-                <select
-                  value={type}
-                  onChange={(e) => setType(e.target.value)}
-                  className="w-full bg-gray-950 border border-gray-800 focus:border-orange-500/40 focus:ring-0 rounded-lg p-2 text-sm text-white"
-                >
-                  <option value="openai">OpenAI compatible API</option>
-                  <option value="ollama">Ollama (Native Local)</option>
-                  <option value="mock">Local Mock Engine</option>
-                </select>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs text-gray-400 font-medium mb-1">SDK Type</label>
+                  <select
+                    value={type}
+                    onChange={(e) => setType(e.target.value)}
+                    className="w-full bg-gray-950 border border-gray-800 focus:border-orange-500/40 focus:ring-0 rounded-lg p-2 text-xs text-white"
+                  >
+                    <option value="openai">OpenAI comp.</option>
+                    <option value="ollama">Ollama</option>
+                    <option value="mock">Local Mock</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs text-gray-400 font-medium mb-1">Rate Limit (RPM)</label>
+                  <input
+                    type="number"
+                    value={rateLimit}
+                    onChange={(e) => setRateLimit(e.target.value)}
+                    className="w-full bg-gray-950 border border-gray-800 focus:border-orange-500/40 focus:ring-0 rounded-lg p-2 text-xs text-white"
+                  />
+                </div>
               </div>
 
               <div>
@@ -222,14 +246,90 @@ export const AIProviders: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs text-gray-400 font-medium mb-1">Secure Authorization Token (API Key)</label>
+                <label className="block text-xs text-gray-400 font-medium mb-1">Secure API Key</label>
                 <input
                   type="password"
                   placeholder="••••••••••••••••••••••••••••"
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
-                  className="w-full bg-gray-950 border border-gray-800 focus:border-orange-500/40 focus:ring-0 rounded-lg p-2 text-sm text-white animate-pulse"
+                  className="w-full bg-gray-950 border border-gray-800 focus:border-orange-500/40 focus:ring-0 rounded-lg p-2 text-sm text-white"
                 />
+              </div>
+
+              {/* V3 Cost Rules */}
+              <div className="grid grid-cols-2 gap-2 p-2.5 bg-gray-950 rounded-lg border border-gray-850">
+                <div>
+                  <label className="block text-[10px] text-gray-400 font-medium mb-1">Prompt ($/1M Tok)</label>
+                  <input
+                    type="text"
+                    value={promptCost}
+                    onChange={(e) => setPromptCost(e.target.value)}
+                    className="w-full bg-gray-900 border border-gray-800 rounded p-1 text-[11px] text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] text-gray-400 font-medium mb-1">Compl. ($/1M Tok)</label>
+                  <input
+                    type="text"
+                    value={completionCost}
+                    onChange={(e) => setCompletionCost(e.target.value)}
+                    className="w-full bg-gray-900 border border-gray-800 rounded p-1 text-[11px] text-white"
+                  />
+                </div>
+              </div>
+
+              {/* Custom Headers JSON */}
+              <div>
+                <label className="block text-xs text-gray-400 font-medium mb-1">Custom HTTP Headers (JSON)</label>
+                <input
+                  type="text"
+                  value={customHeaders}
+                  onChange={(e) => setCustomHeaders(e.target.value)}
+                  className="w-full bg-gray-950 border border-gray-800 focus:border-orange-500/40 focus:ring-0 rounded-lg p-2 text-xs text-white font-mono"
+                />
+              </div>
+
+              {/* Capability Badges */}
+              <div>
+                <label className="block text-xs text-gray-400 font-medium mb-1">Provider Capabilities</label>
+                <div className="grid grid-cols-2 gap-2 p-1.5">
+                  <label className="flex items-center gap-1.5 text-xs text-gray-300">
+                    <input
+                      type="checkbox"
+                      checked={capabilities.chat}
+                      onChange={(e) => setCapabilities({ ...capabilities, chat: e.target.checked })}
+                      className="rounded bg-gray-950 border-gray-800 text-orange-500 focus:ring-0"
+                    />
+                    <span>Chat Loop</span>
+                  </label>
+                  <label className="flex items-center gap-1.5 text-xs text-gray-300">
+                    <input
+                      type="checkbox"
+                      checked={capabilities.vision}
+                      onChange={(e) => setCapabilities({ ...capabilities, vision: e.target.checked })}
+                      className="rounded bg-gray-950 border-gray-800 text-orange-500 focus:ring-0"
+                    />
+                    <span>Vision (Multimodal)</span>
+                  </label>
+                  <label className="flex items-center gap-1.5 text-xs text-gray-300">
+                    <input
+                      type="checkbox"
+                      checked={capabilities.speech}
+                      onChange={(e) => setCapabilities({ ...capabilities, speech: e.target.checked })}
+                      className="rounded bg-gray-950 border-gray-800 text-orange-500 focus:ring-0"
+                    />
+                    <span>Speech (TTS/STT)</span>
+                  </label>
+                  <label className="flex items-center gap-1.5 text-xs text-gray-300">
+                    <input
+                      type="checkbox"
+                      checked={capabilities.embeddings}
+                      onChange={(e) => setCapabilities({ ...capabilities, embeddings: e.target.checked })}
+                      className="rounded bg-gray-950 border-gray-800 text-orange-500 focus:ring-0"
+                    />
+                    <span>Embeddings</span>
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -237,7 +337,7 @@ export const AIProviders: React.FC = () => {
               type="submit"
               className="w-full bg-orange-600 hover:bg-orange-500 text-white font-semibold py-2 rounded-lg text-sm transition-all shadow-md shadow-orange-950/20"
             >
-              Verify & Save Provider
+              Verify & Save Custom Provider
             </button>
           </form>
 

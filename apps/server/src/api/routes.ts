@@ -1017,10 +1017,29 @@ export function registerRoutes(fastify: FastifyInstance) {
     let list = await db.select().from(schema.providers);
     if (list.length === 0) {
       const defaultProv = [
+        // Free & Local AI Engines
         { id: 'prov-ollama', name: 'Ollama (Local Host)', type: 'ollama', baseUrl: 'http://127.0.0.1:11434', apiKey: '', createdAt: new Date() },
-        { id: 'prov-openai', name: 'OpenAI Cloud', type: 'openai', baseUrl: 'https://api.openai.com/v1', apiKey: 'sk-proj-******************', createdAt: new Date() },
+        { id: 'prov-llamacpp', name: 'llama.cpp GGUF', type: 'ollama', baseUrl: 'http://127.0.0.1:8080', apiKey: '', createdAt: new Date() },
+        { id: 'prov-lmstudio', name: 'LM Studio Server', type: 'ollama', baseUrl: 'http://127.0.0.1:1234/v1', apiKey: '', createdAt: new Date() },
+        { id: 'prov-localai', name: 'LocalAI Container', type: 'ollama', baseUrl: 'http://127.0.0.1:8080/v1', apiKey: '', createdAt: new Date() },
+        { id: 'prov-vllm', name: 'vLLM Inference Engine', type: 'openai', baseUrl: 'http://127.0.0.1:8000/v1', apiKey: '', createdAt: new Date() },
+
+        // Paid & Cloud AI Providers
+        { id: 'prov-openai', name: 'OpenAI Cloud (GPT-4o)', type: 'openai', baseUrl: 'https://api.openai.com/v1', apiKey: 'sk-proj-******************', createdAt: new Date() },
         { id: 'prov-anthropic', name: 'Anthropic Claude Engine', type: 'openai', baseUrl: 'https://api.anthropic.com', apiKey: 'sk-ant-******************', createdAt: new Date() },
-        { id: 'prov-deepseek', name: 'DeepSeek Chat Coder', type: 'openai', baseUrl: 'https://api.deepseek.com', apiKey: 'sk-ds-******************', createdAt: new Date() }
+        { id: 'prov-gemini', name: 'Google Gemini Pro', type: 'openai', baseUrl: 'https://generativelanguage.googleapis.com', apiKey: 'AIzaSy******************', createdAt: new Date() },
+        { id: 'prov-mistral', name: 'Mistral AI Platform', type: 'openai', baseUrl: 'https://api.mistral.ai/v1', apiKey: 'mistral-******************', createdAt: new Date() },
+        { id: 'prov-cohere', name: 'Cohere Command R+', type: 'openai', baseUrl: 'https://api.cohere.ai/v1', apiKey: 'cohere-******************', createdAt: new Date() },
+        { id: 'prov-xai', name: 'xAI Grok Engine', type: 'openai', baseUrl: 'https://api.x.ai/v1', apiKey: 'xai-******************', createdAt: new Date() },
+        { id: 'prov-deepseek', name: 'DeepSeek API Hub', type: 'openai', baseUrl: 'https://api.deepseek.com', apiKey: 'sk-ds-******************', createdAt: new Date() },
+        { id: 'prov-openrouter', name: 'OpenRouter Aggregator', type: 'openai', baseUrl: 'https://openrouter.ai/api/v1', apiKey: 'sk-or-******************', createdAt: new Date() },
+        { id: 'prov-groq', name: 'Groq LPU (Llama-3-70b)', type: 'openai', baseUrl: 'https://api.groq.com/openai/v1', apiKey: 'gsk_******************', createdAt: new Date() },
+        { id: 'prov-together', name: 'Together AI GPU Cloud', type: 'openai', baseUrl: 'https://api.together.xyz/v1', apiKey: 'tg-******************', createdAt: new Date() },
+        { id: 'prov-cloudflare', name: 'Cloudflare Workers AI', type: 'openai', baseUrl: 'https://api.cloudflare.com/client/v4', apiKey: 'cf-******************', createdAt: new Date() },
+        { id: 'prov-aws-bedrock', name: 'AWS Bedrock IAM', type: 'openai', baseUrl: 'https://bedrock.us-east-1.amazonaws.com', apiKey: 'aws-******************', createdAt: new Date() },
+        { id: 'prov-azure', name: 'Azure OpenAI Enterprise', type: 'openai', baseUrl: 'https://azure-openai.azure.com', apiKey: 'azure-******************', createdAt: new Date() },
+        { id: 'prov-vertex', name: 'Google Cloud Vertex AI', type: 'openai', baseUrl: 'https://us-central1-aiplatform.googleapis.com', apiKey: 'vertex-******************', createdAt: new Date() },
+        { id: 'prov-qwen', name: 'Qwen Alibaba AI', type: 'openai', baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1', apiKey: 'qwen-******************', createdAt: new Date() }
       ];
       for (const p of defaultProv) {
         await db.insert(schema.providers).values(p).onConflictDoNothing();

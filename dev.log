@@ -41,3 +41,4 @@ web:dev: 3:29:11 PM [vite] (client) hmr update /src/pages/Agents.tsx, /src/index
 web:dev: 3:31:24 PM [vite] (client) hmr update /src/App.tsx, /src/index.css
 web:dev: 3:31:52 PM [vite] (client) hmr update /src/components/Sidebar.tsx, /src/index.css
 web:dev: 3:37:39 PM [vite] (client) hmr update /src/pages/Notifications.tsx, /src/index.css
+web:dev: 6:12:38 PM [vite] (client) hmr update /src/pages/AIProviders.tsx, /src/index.css
