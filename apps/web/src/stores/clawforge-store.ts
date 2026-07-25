@@ -78,6 +78,8 @@ interface ClawForgeState {
   fetchMemories: () => Promise<any[]>;
   deleteMemory: (id: string) => Promise<void>;
   testModelConnection: (providerType: string, baseUrl: string, apiKey: string, model: string) => Promise<boolean>;
+  updateProject: (id: string, updates: Partial<Project>) => Promise<void>;
+  deleteProject: (id: string) => Promise<void>;
 }
 
 const API_BASE = 'http://127.0.0.1:3777/api';
@@ -612,6 +614,56 @@ export const useClawForgeStore = create<ClawForgeState>((set, get) => ({
     } catch (err) {
       console.error('Error testing model connection:', err);
       return false;
+    }
+  },
+
+  updateProject: async (id, updates) => {
+    try {
+      const updated = await apiFetch(`/projects/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(updates)
+      });
+      set((state) => ({
+        projects: state.projects.map(p => p.id === id ? { ...p, ...updated } : p)
+      }));
+    } catch (err) {
+      console.error('Error updating project:', err);
+      set((state) => ({
+        projects: state.projects.map(p => p.id === id ? { ...p, ...updates } : p)
+      }));
+    }
+  },
+
+  deleteProject: async (id) => {
+    try {
+      await apiFetch(`/projects/${id}`, { method: 'DELETE' });
+      set((state) => {
+        const filtered = state.projects.filter(p => p.id !== id);
+        let nextActiveId = state.activeProjectId;
+        if (state.activeProjectId === id) {
+          nextActiveId = filtered[0]?.id || '';
+        }
+        return {
+          projects: filtered,
+          activeProjectId: nextActiveId
+        };
+      });
+      if (get().activeProjectId) {
+        await get().setActiveProjectId(get().activeProjectId);
+      }
+    } catch (err) {
+      console.error('Error deleting project:', err);
+      set((state) => {
+        const filtered = state.projects.filter(p => p.id !== id);
+        let nextActiveId = state.activeProjectId;
+        if (state.activeProjectId === id) {
+          nextActiveId = filtered[0]?.id || '';
+        }
+        return {
+          projects: filtered,
+          activeProjectId: nextActiveId
+        };
+      });
     }
   }
 }));
