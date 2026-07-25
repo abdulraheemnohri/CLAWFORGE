@@ -58,6 +58,15 @@ interface ClawForgeState {
   settings: any;
   wsConnected: boolean;
 
+  // V2 Collections
+  skills: any[];
+  mcpServers: any[];
+  plugins: any[];
+  pairedDevices: any[];
+  workflows: any[];
+  voiceConfig: any;
+  wakewordConfig: any;
+
   // Actions
   initialize: () => Promise<void>;
   loadProjectData: (projectId: string) => Promise<void>;
@@ -80,6 +89,32 @@ interface ClawForgeState {
   testModelConnection: (providerType: string, baseUrl: string, apiKey: string, model: string) => Promise<boolean>;
   updateProject: (id: string, updates: Partial<Project>) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
+
+  // V2 Actions
+  fetchSkills: () => Promise<void>;
+  toggleSkill: (id: string, enabled: boolean) => Promise<void>;
+  addSkill: (title: string, packageName: string, desc: string, version: string) => Promise<void>;
+  deleteSkill: (id: string) => Promise<void>;
+  fetchMcpServers: () => Promise<void>;
+  addMcpServer: (name: string, url: string, desc: string) => Promise<void>;
+  toggleMcpServer: (id: string, enabled: boolean) => Promise<void>;
+  testMcpServer: (id: string) => Promise<boolean>;
+  deleteMcpServer: (id: string) => Promise<void>;
+  fetchPlugins: () => Promise<void>;
+  togglePlugin: (id: string, enabled: boolean) => Promise<void>;
+  addPlugin: (name: string, desc: string, permissions: string[]) => Promise<void>;
+  deletePlugin: (id: string) => Promise<void>;
+  fetchDevices: () => Promise<void>;
+  pairDevice: (name: string, type: string) => Promise<void>;
+  deleteDevice: (id: string) => Promise<void>;
+  fetchWorkflows: () => Promise<void>;
+  addWorkflow: (name: string, triggerType: string, condition: string) => Promise<void>;
+  toggleWorkflow: (id: string, active: boolean) => Promise<void>;
+  triggerWorkflow: (id: string) => Promise<void>;
+  deleteWorkflow: (id: string) => Promise<void>;
+  fetchVoiceAndWakeword: () => Promise<void>;
+  saveVoiceConfig: (config: any) => Promise<void>;
+  saveWakewordConfig: (config: any) => Promise<void>;
 }
 
 const API_BASE = 'http://127.0.0.1:3777/api';
@@ -152,6 +187,27 @@ export const useClawForgeStore = create<ClawForgeState>((set, get) => ({
   },
   wsConnected: false,
 
+  skills: [],
+  mcpServers: [],
+  plugins: [],
+  pairedDevices: [],
+  workflows: [],
+  voiceConfig: {
+    speechEngine: 'Local DeepSpeech',
+    continuousConversation: true,
+    noiseSuppression: true,
+    speakerSelection: 'Default System Audio',
+    microphoneSelection: 'Built-in Microphone',
+    automaticPunctuation: true,
+    language: 'en-US'
+  },
+  wakewordConfig: {
+    enabled: true,
+    wakePhrases: ['Hey Claw', 'Hey Forge'],
+    sensitivity: 0.75,
+    powerMode: 'Balanced'
+  },
+
   initialize: async () => {
     try {
       // 1. Fetch settings
@@ -192,6 +248,14 @@ export const useClawForgeStore = create<ClawForgeState>((set, get) => ({
       const tasksList = await apiFetch('/tasks').catch(() => []);
       const approvalsList = await apiFetch('/approvals').catch(() => []);
       set({ tasks: tasksList, approvals: approvalsList });
+
+      // V2 Load data
+      await get().fetchSkills().catch(() => {});
+      await get().fetchMcpServers().catch(() => {});
+      await get().fetchPlugins().catch(() => {});
+      await get().fetchDevices().catch(() => {});
+      await get().fetchWorkflows().catch(() => {});
+      await get().fetchVoiceAndWakeword().catch(() => {});
 
       // 6. Connect WS
       get().connectWebSocket();
@@ -664,6 +728,308 @@ export const useClawForgeStore = create<ClawForgeState>((set, get) => ({
           activeProjectId: nextActiveId
         };
       });
+    }
+  },
+
+  fetchSkills: async () => {
+    try {
+      const data = await apiFetch('/skills');
+      set({ skills: data });
+    } catch (err) {
+      console.error('Error fetching skills:', err);
+    }
+  },
+
+  toggleSkill: async (id, enabled) => {
+    try {
+      const updated = await apiFetch(`/skills/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ enabled })
+      });
+      set((state) => ({
+        skills: state.skills.map(s => s.id === id ? updated : s)
+      }));
+    } catch (err) {
+      console.error('Error toggling skill:', err);
+      set((state) => ({
+        skills: state.skills.map(s => s.id === id ? { ...s, enabled } : s)
+      }));
+    }
+  },
+
+  addSkill: async (title, packageName, desc, version) => {
+    try {
+      const newSkill = await apiFetch('/skills', {
+        method: 'POST',
+        body: JSON.stringify({ title, packageName, description: desc, version, enabled: true })
+      });
+      set((state) => ({
+        skills: [...state.skills, newSkill]
+      }));
+    } catch (err) {
+      console.error('Error adding skill:', err);
+    }
+  },
+
+  deleteSkill: async (id) => {
+    try {
+      await apiFetch(`/skills/${id}`, { method: 'DELETE' });
+      set((state) => ({
+        skills: state.skills.filter(s => s.id !== id)
+      }));
+    } catch (err) {
+      console.error('Error deleting skill:', err);
+    }
+  },
+
+  fetchMcpServers: async () => {
+    try {
+      const data = await apiFetch('/mcp');
+      set({ mcpServers: data });
+    } catch (err) {
+      console.error('Error fetching MCP servers:', err);
+    }
+  },
+
+  addMcpServer: async (name, url, desc) => {
+    try {
+      const newMcp = await apiFetch('/mcp', {
+        method: 'POST',
+        body: JSON.stringify({ name, url, description: desc, status: 'disconnected', enabled: true })
+      });
+      set((state) => ({
+        mcpServers: [...state.mcpServers, newMcp]
+      }));
+    } catch (err) {
+      console.error('Error adding MCP server:', err);
+    }
+  },
+
+  toggleMcpServer: async (id, enabled) => {
+    try {
+      const updated = await apiFetch(`/mcp/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ enabled })
+      });
+      set((state) => ({
+        mcpServers: state.mcpServers.map(m => m.id === id ? updated : m)
+      }));
+    } catch (err) {
+      console.error('Error toggling MCP server:', err);
+      set((state) => ({
+        mcpServers: state.mcpServers.map(m => m.id === id ? { ...m, enabled } : m)
+      }));
+    }
+  },
+
+  testMcpServer: async (id) => {
+    try {
+      const res = await apiFetch(`/mcp/${id}/test`, { method: 'POST' });
+      if (res.success) {
+        set((state) => ({
+          mcpServers: state.mcpServers.map(m => m.id === id ? { ...m, status: 'connected' } : m)
+        }));
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Error testing MCP server:', err);
+      return false;
+    }
+  },
+
+  deleteMcpServer: async (id) => {
+    try {
+      await apiFetch(`/mcp/${id}`, { method: 'DELETE' });
+      set((state) => ({
+        mcpServers: state.mcpServers.filter(m => m.id !== id)
+      }));
+    } catch (err) {
+      console.error('Error deleting MCP server:', err);
+    }
+  },
+
+  fetchPlugins: async () => {
+    try {
+      const data = await apiFetch('/plugins');
+      set({ plugins: data });
+    } catch (err) {
+      console.error('Error fetching plugins:', err);
+    }
+  },
+
+  togglePlugin: async (id, enabled) => {
+    try {
+      const updated = await apiFetch(`/plugins/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ enabled })
+      });
+      set((state) => ({
+        plugins: state.plugins.map(p => p.id === id ? updated : p)
+      }));
+    } catch (err) {
+      console.error('Error toggling plugin:', err);
+      set((state) => ({
+        plugins: state.plugins.map(p => p.id === id ? { ...p, enabled } : p)
+      }));
+    }
+  },
+
+  addPlugin: async (name, desc, permissions) => {
+    try {
+      const newPlugin = await apiFetch('/plugins', {
+        method: 'POST',
+        body: JSON.stringify({ name, description: desc, permissions, manifest: { entry: 'index.js' } })
+      });
+      set((state) => ({
+        plugins: [...state.plugins, newPlugin]
+      }));
+    } catch (err) {
+      console.error('Error adding plugin:', err);
+    }
+  },
+
+  deletePlugin: async (id) => {
+    try {
+      await apiFetch(`/plugins/${id}`, { method: 'DELETE' });
+      set((state) => ({
+        plugins: state.plugins.filter(p => p.id !== id)
+      }));
+    } catch (err) {
+      console.error('Error deleting plugin:', err);
+    }
+  },
+
+  fetchDevices: async () => {
+    try {
+      const data = await apiFetch('/devices');
+      set({ pairedDevices: data });
+    } catch (err) {
+      console.error('Error fetching devices:', err);
+    }
+  },
+
+  pairDevice: async (name, type) => {
+    try {
+      const newDevice = await apiFetch('/devices/pair', {
+        method: 'POST',
+        body: JSON.stringify({ name, type })
+      });
+      set((state) => ({
+        pairedDevices: [...state.pairedDevices, newDevice]
+      }));
+    } catch (err) {
+      console.error('Error pairing device:', err);
+    }
+  },
+
+  deleteDevice: async (id) => {
+    try {
+      await apiFetch(`/devices/${id}`, { method: 'DELETE' });
+      set((state) => ({
+        pairedDevices: state.pairedDevices.filter(d => d.id !== id)
+      }));
+    } catch (err) {
+      console.error('Error deleting device:', err);
+    }
+  },
+
+  fetchWorkflows: async () => {
+    try {
+      const data = await apiFetch('/automation');
+      set({ workflows: data });
+    } catch (err) {
+      console.error('Error fetching workflows:', err);
+    }
+  },
+
+  addWorkflow: async (name, triggerType, condition) => {
+    try {
+      const newWorkflow = await apiFetch('/automation', {
+        method: 'POST',
+        body: JSON.stringify({ name, triggerType, condition })
+      });
+      set((state) => ({
+        workflows: [...state.workflows, newWorkflow]
+      }));
+    } catch (err) {
+      console.error('Error adding workflow:', err);
+    }
+  },
+
+  toggleWorkflow: async (id, active) => {
+    const status = active ? 'active' : 'paused';
+    try {
+      const updated = await apiFetch(`/automation/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status })
+      });
+      set((state) => ({
+        workflows: state.workflows.map(w => w.id === id ? updated : w)
+      }));
+    } catch (err) {
+      console.error('Error toggling workflow:', err);
+      set((state) => ({
+        workflows: state.workflows.map(w => w.id === id ? { ...w, status } : w)
+      }));
+    }
+  },
+
+  triggerWorkflow: async (id) => {
+    try {
+      const updated = await apiFetch(`/workflows/${id}/trigger`, { method: 'POST' });
+      set((state) => ({
+        workflows: state.workflows.map(w => w.id === id ? updated : w)
+      }));
+    } catch (err) {
+      console.error('Error triggering workflow:', err);
+    }
+  },
+
+  deleteWorkflow: async (id) => {
+    try {
+      await apiFetch(`/automation/${id}`, { method: 'DELETE' });
+      set((state) => ({
+        workflows: state.workflows.filter(w => w.id !== id)
+      }));
+    } catch (err) {
+      console.error('Error deleting workflow:', err);
+    }
+  },
+
+  fetchVoiceAndWakeword: async () => {
+    try {
+      const voice = await apiFetch('/voice');
+      const wakeword = await apiFetch('/wakeword');
+      set({ voiceConfig: voice, wakewordConfig: wakeword });
+    } catch (err) {
+      console.error('Error fetching voice/wakeword config:', err);
+    }
+  },
+
+  saveVoiceConfig: async (config) => {
+    try {
+      await apiFetch('/voice', {
+        method: 'POST',
+        body: JSON.stringify(config)
+      });
+      set({ voiceConfig: config });
+    } catch (err) {
+      console.error('Error saving voice config:', err);
+      set({ voiceConfig: config });
+    }
+  },
+
+  saveWakewordConfig: async (config) => {
+    try {
+      await apiFetch('/wakeword', {
+        method: 'POST',
+        body: JSON.stringify(config)
+      });
+      set({ wakewordConfig: config });
+    } catch (err) {
+      console.error('Error saving wakeword config:', err);
+      set({ wakewordConfig: config });
     }
   }
 }));

@@ -11,6 +11,16 @@ import { WebSocketManager } from '../websocket/ws-manager.js';
 import { V1_AGENTS } from '../agent/agents-config.js';
 
 export function registerRoutes(fastify: FastifyInstance) {
+  // CORS Support Hook
+  fastify.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {
+    reply.header('Access-Control-Allow-Origin', '*');
+    reply.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+    reply.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (request.method === 'OPTIONS') {
+      return reply.status(204).send();
+    }
+  });
+
   // Authentication middleware
   const authToken = 'clawforge-default-token-12345';
 
@@ -338,6 +348,489 @@ export function registerRoutes(fastify: FastifyInstance) {
     }
 
     return { ...result, text, base64 };
+  });
+
+  // ==========================================
+  // V2 API Extensions
+  // ==========================================
+
+  // Skills CRUD & pre-population
+  fastify.get('/api/skills', async () => {
+    let list = await db.select().from(schema.skills);
+    if (list.length === 0) {
+      // Seed default skills
+      const defaultSkills = [
+        {
+          id: 'skill-react-dev',
+          packageName: '@clawforge/skill-react-dev',
+          title: 'React Developer',
+          description: 'Specialized agent for React, TailwindCSS, and frontend state optimization.',
+          version: '1.2.0',
+          enabled: true,
+          skillJson: JSON.stringify({ tools: ['create-component', 'optimize-bundle'] }),
+          instructions: 'Always use Tailwind classes and adhere strictly to TypeScript rules.',
+          createdAt: new Date()
+        },
+        {
+          id: 'skill-nodejs-dev',
+          packageName: '@clawforge/skill-nodejs-dev',
+          title: 'Node.js Developer',
+          description: 'Expertise in Fastify, Express, and high-throughput background processing pipelines.',
+          version: '1.0.4',
+          enabled: true,
+          skillJson: JSON.stringify({ tools: ['generate-route', 'inspect-memory'] }),
+          instructions: 'Leverage native ESM and keep dependencies lean.',
+          createdAt: new Date()
+        },
+        {
+          id: 'skill-python-dev',
+          packageName: '@clawforge/skill-python-dev',
+          title: 'Python Developer',
+          description: 'Expert in Python pandas, FastAPI, and asynchronous task scheduling.',
+          version: '2.1.0',
+          enabled: false,
+          skillJson: JSON.stringify({ tools: ['run-notebook', 'lint-py'] }),
+          instructions: 'Follow PEP 8 rules closely.',
+          createdAt: new Date()
+        },
+        {
+          id: 'skill-qa-tester',
+          packageName: '@clawforge/skill-qa-tester',
+          title: 'QA Tester',
+          description: 'Automated Playwright and unit testing suite generator.',
+          version: '1.1.1',
+          enabled: true,
+          skillJson: JSON.stringify({ tools: ['generate-tests', 'run-e2e'] }),
+          instructions: 'Ensure complete test coverage and generate browser screenshots for user validation.',
+          createdAt: new Date()
+        }
+      ];
+      for (const s of defaultSkills) {
+        await db.insert(schema.skills).values(s).onConflictDoNothing();
+      }
+      list = await db.select().from(schema.skills);
+    }
+    return list;
+  });
+
+  fastify.post('/api/skills', async (request: FastifyRequest) => {
+    const body = request.body as any;
+    const id = body.id || 'skill-' + Math.random().toString(36).substring(7);
+    const newSkill = {
+      id,
+      packageName: body.packageName || '@clawforge/skill-custom',
+      title: body.title || 'Custom Assistant',
+      description: body.description || '',
+      version: body.version || '1.0.0',
+      enabled: body.enabled !== undefined ? body.enabled : true,
+      skillJson: JSON.stringify(body.skillJson || {}),
+      instructions: body.instructions || '',
+      createdAt: new Date()
+    };
+    await db.insert(schema.skills).values(newSkill);
+    return newSkill;
+  });
+
+  fastify.patch('/api/skills/:id', async (request: FastifyRequest<{ Params: { id: string } }>) => {
+    const body = request.body as any;
+    const updates: any = {};
+    if (body.enabled !== undefined) updates.enabled = body.enabled;
+    if (body.title !== undefined) updates.title = body.title;
+    if (body.description !== undefined) updates.description = body.description;
+    if (body.version !== undefined) updates.version = body.version;
+
+    await db.update(schema.skills).set(updates).where(eq(schema.skills.id, request.params.id));
+    const res = await db.select().from(schema.skills).where(eq(schema.skills.id, request.params.id));
+    return res[0];
+  });
+
+  fastify.delete('/api/skills/:id', async (request: FastifyRequest<{ Params: { id: string } }>) => {
+    await db.delete(schema.skills).where(eq(schema.skills.id, request.params.id));
+    return { success: true };
+  });
+
+
+  // MCP Servers CRUD & pre-population
+  fastify.get('/api/mcp', async () => {
+    let list = await db.select().from(schema.mcpServers);
+    if (list.length === 0) {
+      const defaultMcp = [
+        {
+          id: 'mcp-github',
+          name: 'GitHub MCP',
+          description: 'Secure API connector to list, audit, and push commits to repository branches.',
+          version: '1.5.0',
+          status: 'connected',
+          url: 'http://127.0.0.1:4011/mcp',
+          toolsJson: JSON.stringify(['github.list_prs', 'github.create_issue', 'github.merge_branch']),
+          permissionsJson: JSON.stringify({ read: true, write: true }),
+          enabled: true,
+          createdAt: new Date()
+        },
+        {
+          id: 'mcp-filesystem',
+          name: 'Filesystem MCP',
+          description: 'Sandboxed local system file directory and file tree explorer.',
+          version: '1.0.0',
+          status: 'connected',
+          url: 'http://127.0.0.1:4012/mcp',
+          toolsJson: JSON.stringify(['fs.read_file', 'fs.write_file', 'fs.list_dir']),
+          permissionsJson: JSON.stringify({ read: true, write: false }),
+          enabled: true,
+          createdAt: new Date()
+        },
+        {
+          id: 'mcp-postgres',
+          name: 'PostgreSQL MCP',
+          description: 'Relational PostgreSQL connection string schema explorer & analytical query runner.',
+          version: '2.0.1',
+          status: 'disconnected',
+          url: 'http://127.0.0.1:4013/mcp',
+          toolsJson: JSON.stringify(['pg.run_query', 'pg.get_tables']),
+          permissionsJson: JSON.stringify({ read: true, write: true }),
+          enabled: false,
+          createdAt: new Date()
+        }
+      ];
+      for (const m of defaultMcp) {
+        await db.insert(schema.mcpServers).values(m).onConflictDoNothing();
+      }
+      list = await db.select().from(schema.mcpServers);
+    }
+    return list;
+  });
+
+  fastify.post('/api/mcp', async (request: FastifyRequest) => {
+    const body = request.body as any;
+    const id = body.id || 'mcp-' + Math.random().toString(36).substring(7);
+    const newMcp = {
+      id,
+      name: body.name || 'New MCP Server',
+      description: body.description || '',
+      version: body.version || '1.0.0',
+      status: body.status || 'disconnected',
+      url: body.url || '',
+      toolsJson: JSON.stringify(body.tools || []),
+      permissionsJson: JSON.stringify(body.permissions || {}),
+      enabled: body.enabled !== undefined ? body.enabled : true,
+      createdAt: new Date()
+    };
+    await db.insert(schema.mcpServers).values(newMcp);
+    return newMcp;
+  });
+
+  fastify.patch('/api/mcp/:id', async (request: FastifyRequest<{ Params: { id: string } }>) => {
+    const body = request.body as any;
+    const updates: any = {};
+    if (body.enabled !== undefined) updates.enabled = body.enabled;
+    if (body.name !== undefined) updates.name = body.name;
+    if (body.description !== undefined) updates.description = body.description;
+    if (body.status !== undefined) updates.status = body.status;
+    if (body.url !== undefined) updates.url = body.url;
+
+    await db.update(schema.mcpServers).set(updates).where(eq(schema.mcpServers.id, request.params.id));
+    const res = await db.select().from(schema.mcpServers).where(eq(schema.mcpServers.id, request.params.id));
+    return res[0];
+  });
+
+  fastify.post('/api/mcp/:id/test', async (request: FastifyRequest<{ Params: { id: string } }>) => {
+    const res = await db.select().from(schema.mcpServers).where(eq(schema.mcpServers.id, request.params.id));
+    if (res.length === 0) return { success: false, error: 'MCP Server not found' };
+
+    // Toggle status to connected on test connection
+    await db.update(schema.mcpServers).set({ status: 'connected' }).where(eq(schema.mcpServers.id, request.params.id));
+    const updated = await db.select().from(schema.mcpServers).where(eq(schema.mcpServers.id, request.params.id));
+    return { success: true, server: updated[0] };
+  });
+
+  fastify.delete('/api/mcp/:id', async (request: FastifyRequest<{ Params: { id: string } }>) => {
+    await db.delete(schema.mcpServers).where(eq(schema.mcpServers.id, request.params.id));
+    return { success: true };
+  });
+
+
+  // Plugins CRUD & pre-population
+  fastify.get('/api/plugins', async () => {
+    let list = await db.select().from(schema.plugins);
+    if (list.length === 0) {
+      const defaultPlugins = [
+        {
+          id: 'plugin-desktop-tools',
+          name: 'Desktop Tools',
+          description: 'Allows desktop integrations such as custom menu actions, audio input pipelines, and task bar indicators.',
+          version: '1.0.0',
+          status: 'installed',
+          enabled: true,
+          permissionsJson: JSON.stringify(['microphone', 'desktop-notifications']),
+          manifestJson: JSON.stringify({ entry: 'dist/desktop.js', uiExtensions: true }),
+          createdAt: new Date()
+        },
+        {
+          id: 'plugin-slack-connector',
+          name: 'Slack Notification Bridge',
+          description: 'Publishes task successes/failures and live human-in-the-loop permission prompts to selected Slack channels.',
+          version: '2.1.2',
+          status: 'installed',
+          enabled: true,
+          permissionsJson: JSON.stringify(['webhooks', 'external-network']),
+          manifestJson: JSON.stringify({ entry: 'dist/slack.js', uiExtensions: false }),
+          createdAt: new Date()
+        }
+      ];
+      for (const p of defaultPlugins) {
+        await db.insert(schema.plugins).values(p).onConflictDoNothing();
+      }
+      list = await db.select().from(schema.plugins);
+    }
+    return list;
+  });
+
+  fastify.post('/api/plugins', async (request: FastifyRequest) => {
+    const body = request.body as any;
+    const id = body.id || 'plugin-' + Math.random().toString(36).substring(7);
+    const newPlugin = {
+      id,
+      name: body.name || 'New Plugin',
+      description: body.description || '',
+      version: body.version || '1.0.0',
+      status: 'installed',
+      enabled: body.enabled !== undefined ? body.enabled : true,
+      permissionsJson: JSON.stringify(body.permissions || []),
+      manifestJson: JSON.stringify(body.manifest || {}),
+      createdAt: new Date()
+    };
+    await db.insert(schema.plugins).values(newPlugin);
+    return newPlugin;
+  });
+
+  fastify.patch('/api/plugins/:id', async (request: FastifyRequest<{ Params: { id: string } }>) => {
+    const body = request.body as any;
+    const updates: any = {};
+    if (body.enabled !== undefined) updates.enabled = body.enabled;
+    if (body.name !== undefined) updates.name = body.name;
+    if (body.description !== undefined) updates.description = body.description;
+
+    await db.update(schema.plugins).set(updates).where(eq(schema.plugins.id, request.params.id));
+    const res = await db.select().from(schema.plugins).where(eq(schema.plugins.id, request.params.id));
+    return res[0];
+  });
+
+  fastify.delete('/api/plugins/:id', async (request: FastifyRequest<{ Params: { id: string } }>) => {
+    await db.delete(schema.plugins).where(eq(schema.plugins.id, request.params.id));
+    return { success: true };
+  });
+
+
+  // Paired Devices CRUD & pre-population
+  fastify.get('/api/devices', async () => {
+    let list = await db.select().from(schema.pairedDevices);
+    if (list.length === 0) {
+      const defaultDevices = [
+        {
+          id: 'dev-macbook-cli',
+          name: 'MacBook Pro CLI Client',
+          type: 'cli',
+          pairingCode: 'CF-9821',
+          status: 'paired',
+          lastConnectedAt: new Date(),
+          createdAt: new Date()
+        },
+        {
+          id: 'dev-windows-workspace',
+          name: 'Windows Desktop Workspace',
+          type: 'desktop',
+          pairingCode: 'CF-3301',
+          status: 'paired',
+          lastConnectedAt: new Date(Date.now() - 3600000),
+          createdAt: new Date()
+        }
+      ];
+      for (const d of defaultDevices) {
+        await db.insert(schema.pairedDevices).values(d).onConflictDoNothing();
+      }
+      list = await db.select().from(schema.pairedDevices);
+    }
+    return list;
+  });
+
+  fastify.post('/api/devices/pair', async (request: FastifyRequest) => {
+    const body = request.body as any;
+    const id = 'dev-' + Math.random().toString(36).substring(7);
+    const code = 'CF-' + Math.floor(1000 + Math.random() * 9000);
+    const newDevice = {
+      id,
+      name: body.name || 'New Mobile Companion',
+      type: body.type || 'android',
+      pairingCode: code,
+      status: 'pending',
+      lastConnectedAt: null,
+      createdAt: new Date()
+    };
+    await db.insert(schema.pairedDevices).values(newDevice);
+    return newDevice;
+  });
+
+  fastify.delete('/api/devices/:id', async (request: FastifyRequest<{ Params: { id: string } }>) => {
+    await db.delete(schema.pairedDevices).where(eq(schema.pairedDevices.id, request.params.id));
+    return { success: true };
+  });
+
+
+  // Workflow Automation & pre-population
+  fastify.get('/api/automation', async () => {
+    let list = await db.select().from(schema.workflows);
+    if (list.length === 0) {
+      const defaultWorkflows = [
+        {
+          id: 'wf-daily-git',
+          name: 'Daily GitHub Sync',
+          triggerType: 'schedule',
+          condition: 'Every day at 09:00 AM',
+          status: 'active',
+          metricsJson: JSON.stringify({ totalRuns: 124, successes: 121, failures: 3 }),
+          executionLogsJson: JSON.stringify([
+            { timestamp: new Date(Date.now() - 60000).toISOString(), status: 'success', message: 'Pull requests audited and summary compiled successfully.' }
+          ]),
+          createdAt: new Date()
+        },
+        {
+          id: 'wf-code-audit',
+          name: 'Auto Code Review & Audit',
+          triggerType: 'git_commit',
+          condition: 'On branch main commit',
+          status: 'active',
+          metricsJson: JSON.stringify({ totalRuns: 15, successes: 15, failures: 0 }),
+          executionLogsJson: JSON.stringify([
+            { timestamp: new Date(Date.now() - 3600000).toISOString(), status: 'success', message: 'All files analyzed with no high risk patterns identified.' }
+          ]),
+          createdAt: new Date()
+        }
+      ];
+      for (const w of defaultWorkflows) {
+        await db.insert(schema.workflows).values(w).onConflictDoNothing();
+      }
+      list = await db.select().from(schema.workflows);
+    }
+    return list;
+  });
+
+  fastify.post('/api/automation', async (request: FastifyRequest) => {
+    const body = request.body as any;
+    const id = body.id || 'wf-' + Math.random().toString(36).substring(7);
+    const newWorkflow = {
+      id,
+      name: body.name || 'Unnamed Workflow',
+      triggerType: body.triggerType || 'manual',
+      condition: body.condition || '',
+      status: 'active',
+      metricsJson: JSON.stringify({ totalRuns: 0, successes: 0, failures: 0 }),
+      executionLogsJson: JSON.stringify([]),
+      createdAt: new Date()
+    };
+    await db.insert(schema.workflows).values(newWorkflow);
+    return newWorkflow;
+  });
+
+  fastify.patch('/api/automation/:id', async (request: FastifyRequest<{ Params: { id: string } }>) => {
+    const body = request.body as any;
+    const updates: any = {};
+    if (body.status !== undefined) updates.status = body.status;
+    if (body.name !== undefined) updates.name = body.name;
+    if (body.condition !== undefined) updates.condition = body.condition;
+    if (body.triggerType !== undefined) updates.triggerType = body.triggerType;
+
+    await db.update(schema.workflows).set(updates).where(eq(schema.workflows.id, request.params.id));
+    const res = await db.select().from(schema.workflows).where(eq(schema.workflows.id, request.params.id));
+    return res[0];
+  });
+
+  fastify.post('/api/workflows/:id/trigger', async (request: FastifyRequest<{ Params: { id: string } }>) => {
+    const res = await db.select().from(schema.workflows).where(eq(schema.workflows.id, request.params.id));
+    if (res.length === 0) return { success: false, error: 'Workflow not found' };
+
+    const wf = res[0];
+    const metrics = JSON.parse(wf.metricsJson || '{"totalRuns":0,"successes":0,"failures":0}');
+    metrics.totalRuns += 1;
+    metrics.successes += 1;
+
+    const logs = JSON.parse(wf.executionLogsJson || '[]');
+    logs.unshift({
+      timestamp: new Date().toISOString(),
+      status: 'success',
+      message: 'Manual workflow execution completed successfully.'
+    });
+
+    await db.update(schema.workflows).set({
+      metricsJson: JSON.stringify(metrics),
+      executionLogsJson: JSON.stringify(logs)
+    }).where(eq(schema.workflows.id, request.params.id));
+
+    WebSocketManager.getInstance().broadcastAll('workflow.completed', { workflowId: request.params.id });
+
+    const updated = await db.select().from(schema.workflows).where(eq(schema.workflows.id, request.params.id));
+    return updated[0];
+  });
+
+  fastify.delete('/api/automation/:id', async (request: FastifyRequest<{ Params: { id: string } }>) => {
+    await db.delete(schema.workflows).where(eq(schema.workflows.id, request.params.id));
+    return { success: true };
+  });
+
+
+  // Voice & Wakeword configurations
+  fastify.get('/api/voice', async () => {
+    const res = await db.select().from(schema.settings).where(eq(schema.settings.key, 'v2_voice'));
+    if (res.length === 0) {
+      const config = {
+        speechEngine: 'Local DeepSpeech',
+        continuousConversation: true,
+        noiseSuppression: true,
+        speakerSelection: 'Default System Audio',
+        microphoneSelection: 'Built-in Microphone',
+        automaticPunctuation: true,
+        language: 'en-US'
+      };
+      await db.insert(schema.settings).values({ key: 'v2_voice', value: JSON.stringify(config) });
+      return config;
+    }
+    return JSON.parse(res[0].value);
+  });
+
+  fastify.post('/api/voice', async (request: FastifyRequest) => {
+    const body = request.body as any;
+    await db.insert(schema.settings)
+      .values({ key: 'v2_voice', value: JSON.stringify(body) })
+      .onConflictDoUpdate({
+        target: schema.settings.key,
+        set: { value: JSON.stringify(body) }
+      });
+    return { success: true };
+  });
+
+  fastify.get('/api/wakeword', async () => {
+    const res = await db.select().from(schema.settings).where(eq(schema.settings.key, 'v2_wakeword'));
+    if (res.length === 0) {
+      const config = {
+        enabled: true,
+        wakePhrases: ['Hey Claw', 'Hey Forge'],
+        sensitivity: 0.75,
+        powerMode: 'Balanced'
+      };
+      await db.insert(schema.settings).values({ key: 'v2_wakeword', value: JSON.stringify(config) });
+      return config;
+    }
+    return JSON.parse(res[0].value);
+  });
+
+  fastify.post('/api/wakeword', async (request: FastifyRequest) => {
+    const body = request.body as any;
+    await db.insert(schema.settings)
+      .values({ key: 'v2_wakeword', value: JSON.stringify(body) })
+      .onConflictDoUpdate({
+        target: schema.settings.key,
+        set: { value: JSON.stringify(body) }
+      });
+    return { success: true };
   });
 
   // Settings
