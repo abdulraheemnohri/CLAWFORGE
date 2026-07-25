@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useClawForgeStore } from './stores/clawforge-store.js';
 import { Sidebar } from './components/Sidebar.js';
 import { ActivityCenter } from './components/ActivityCenter.js';
@@ -17,7 +17,11 @@ import { Browser } from './pages/Browser.js';
 import { Settings } from './pages/Settings.js';
 
 export const App: React.FC = () => {
-  const { activeTab } = useClawForgeStore();
+  const { activeTab, initialize } = useClawForgeStore();
+
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
 
   const renderActiveView = () => {
     switch (activeTab) {

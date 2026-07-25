@@ -1,26 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useClawForgeStore } from '../stores/clawforge-store.js';
 import { Brain, Search, Trash2, Calendar, FileCheck, Sparkles } from 'lucide-react';
 
 export const Memory: React.FC = () => {
-  const { clearProjectMemory } = useClawForgeStore();
+  const { clearProjectMemory, activeProjectId, fetchMemories, deleteMemory } = useClawForgeStore();
   const [query, setQuery] = useState('');
-  const [memories, setMemories] = useState([
-    { id: '1', type: 'preference', content: 'User prefers dark mode and uses Tailwind CSS for all dashboards.', date: 'Today, 10:31 AM' },
-    { id: '2', type: 'decision', content: 'Use SQLite rather than PostgreSQL to keep local server installation simple.', date: 'Today, 10:35 AM' },
-    { id: '3', type: 'conversation', content: 'User requested building a responsive mobile-friendly React Expense Tracker.', date: 'Yesterday, 4:10 PM' }
-  ]);
+  const [memories, setMemories] = useState<any[]>([]);
 
-  const handleDelete = (id: string) => {
-    setMemories(prev => prev.filter(m => m.id !== id));
+  const loadMemories = () => {
+    fetchMemories().then(data => setMemories(data));
   };
 
-  const handleClearAll = () => {
-    setMemories([]);
-    clearProjectMemory();
+  useEffect(() => {
+    loadMemories();
+  }, [activeProjectId]);
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteMemory(id);
+      setMemories(prev => prev.filter(m => m.id !== id));
+    } catch (err) {
+      console.error('Error deleting memory:', err);
+    }
   };
 
-  const filtered = memories.filter(m => m.content.toLowerCase().includes(query.toLowerCase()));
+  const handleClearAll = async () => {
+    try {
+      await clearProjectMemory();
+      setMemories([]);
+    } catch (err) {
+      console.error('Error clearing memories:', err);
+    }
+  };
+
+  const filtered = memories.filter(m => (m.content || '').toLowerCase().includes(query.toLowerCase()));
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6 max-w-5xl mx-auto">
@@ -71,7 +84,7 @@ export const Memory: React.FC = () => {
                     </span>
                     <span className="text-[10px] text-gray-500 flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
-                      {m.date}
+                      {m.createdAt ? new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Today'}
                     </span>
                   </div>
                   <p className="text-xs text-gray-300 leading-relaxed mt-2">{m.content}</p>
