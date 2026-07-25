@@ -1,0 +1,20 @@
+{
+  "name": "cli",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "clawforge": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "commander": "^12.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "@types/node": "^22.10.1"
+  }
+}
