@@ -3,7 +3,7 @@ import { useClawForgeStore } from '../stores/clawforge-store.js';
 import { Globe, ArrowRight, Camera, Monitor, Shield, StopCircle } from 'lucide-react';
 
 export const Browser: React.FC = () => {
-  const { browserUrl, browserText, browserNavigate } = useClawForgeStore();
+  const { browserUrl, browserText, browserScreenshot, browserNavigate } = useClawForgeStore();
   const [url, setUrl] = useState(browserUrl);
 
   const handleGo = (e: React.FormEvent) => {
@@ -59,16 +59,22 @@ export const Browser: React.FC = () => {
 
         {/* Viewport Frame */}
         <div className="flex-1 bg-gray-900/40 p-6 flex flex-col items-center justify-center text-center relative overflow-y-auto">
-          <div className="max-w-md space-y-4">
-            <div className="w-16 h-16 rounded-full bg-orange-600/10 text-orange-400 flex items-center justify-center mx-auto shadow-md">
-              <Monitor className="w-8 h-8" />
-            </div>
+          <div className="max-w-2xl w-full space-y-4">
+            {browserScreenshot ? (
+              <div className="border border-gray-800 rounded-lg overflow-hidden max-w-full bg-black shadow-lg">
+                <img src={browserScreenshot} alt="Browser screenshot viewport" className="object-contain w-full max-h-[350px] mx-auto" />
+              </div>
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-orange-600/10 text-orange-400 flex items-center justify-center mx-auto shadow-md">
+                <Monitor className="w-8 h-8" />
+              </div>
+            )}
             <div className="space-y-1.5">
               <h3 className="font-semibold text-sm text-gray-200">Active Viewport Monitor</h3>
               <p className="text-xs text-gray-500 font-mono break-all">{browserUrl}</p>
             </div>
             <div className="p-4 bg-gray-950 border border-gray-850 rounded-xl max-h-48 overflow-y-auto">
-              <p className="text-xs text-gray-400 font-sans leading-relaxed text-left">
+              <p className="text-xs text-gray-400 font-sans leading-relaxed text-left whitespace-pre-wrap">
                 {browserText}
               </p>
             </div>

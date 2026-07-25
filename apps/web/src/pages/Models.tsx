@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useClawForgeStore } from '../stores/clawforge-store.js';
 import { Cpu, RefreshCw, Plus, Trash2, CheckCircle2 } from 'lucide-react';
 
 export const Models: React.FC = () => {
+  const { testModelConnection } = useClawForgeStore();
   const [providers, setProviders] = useState([
     { id: '1', name: 'Ollama local', type: 'Ollama', url: 'http://127.0.0.1:11434', model: 'llama3:latest', connected: true },
     { id: '2', name: 'OpenAI Cloud', type: 'OpenAI-compatible', url: 'https://api.openai.com/v1', model: 'gpt-4o', connected: false }
@@ -11,10 +13,23 @@ export const Models: React.FC = () => {
 
   const checkConnection = (id: string) => {
     setChecking(id);
-    setTimeout(() => {
+    const p = providers.find(item => item.id === id);
+    if (!p) {
       setChecking(null);
-      setProviders(prev => prev.map(p => p.id === id ? { ...p, connected: true } : p));
-    }, 1200);
+      return;
+    }
+
+    testModelConnection(p.type === 'Ollama' ? 'ollama' : 'openai', p.url, '', p.model)
+      .then(connected => {
+        setProviders(prev => prev.map(item => item.id === id ? { ...item, connected } : item));
+      })
+      .catch(err => {
+        console.error('Error testing model connection:', err);
+        setProviders(prev => prev.map(item => item.id === id ? { ...item, connected: false } : item));
+      })
+      .finally(() => {
+        setChecking(null);
+      });
   };
 
   return (

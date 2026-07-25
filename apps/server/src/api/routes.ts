@@ -300,6 +300,46 @@ export function registerRoutes(fastify: FastifyInstance) {
     return { success: true };
   });
 
+  // Manual Terminal Executions
+  fastify.post('/api/terminal/run', async (request: FastifyRequest) => {
+    const { command, projectId } = request.body as any;
+    const projs = await db.select().from(schema.projects).where(eq(schema.projects.id, projectId));
+    if (projs.length === 0) {
+      throw new Error('Project not found');
+    }
+    const tool = ToolRegistry.getInstance().getTool('terminal.run');
+    if (!tool) throw new Error('terminal.run tool not found');
+
+    const result = await tool.execute({ command }, { workspacePath: projs[0].workspacePath, projectId });
+    return result;
+  });
+
+  // Manual Browser Navigation
+  fastify.post('/api/browser/navigate', async (request: FastifyRequest) => {
+    const { url } = request.body as any;
+    const openTool = ToolRegistry.getInstance().getTool('browser.open');
+    if (!openTool) throw new Error('browser.open tool not found');
+    const result = await openTool.execute({ url }, { workspacePath: './', projectId: 'temp' });
+
+    // Extract text
+    const extractTool = ToolRegistry.getInstance().getTool('browser.extract');
+    let text = '';
+    if (extractTool) {
+      const extRes = await extractTool.execute({}, { workspacePath: './', projectId: 'temp' });
+      if (extRes.success) text = extRes.text;
+    }
+
+    // Get screenshot
+    const screenshotTool = ToolRegistry.getInstance().getTool('browser.screenshot');
+    let base64 = '';
+    if (screenshotTool) {
+      const scrRes = await screenshotTool.execute({}, { workspacePath: './', projectId: 'temp' });
+      if (scrRes.success) base64 = scrRes.base64;
+    }
+
+    return { ...result, text, base64 };
+  });
+
   // Settings
   fastify.get('/api/settings', async () => {
     const rows = await db.select().from(schema.settings);

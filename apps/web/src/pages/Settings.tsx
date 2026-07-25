@@ -13,6 +13,18 @@ export const Settings: React.FC = () => {
     policy: settings?.policy || 'interactive'
   });
 
+  React.useEffect(() => {
+    if (settings) {
+      setForm({
+        theme: settings.theme || 'dark',
+        maxIterations: settings.maxIterations || 20,
+        timeout: settings.timeout || 300,
+        defaultWorkspace: settings.defaultWorkspace || './workspace',
+        policy: settings.policy || 'interactive'
+      });
+    }
+  }, [settings]);
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     updateSettings(form);
