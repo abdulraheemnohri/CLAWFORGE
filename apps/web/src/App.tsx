@@ -24,6 +24,15 @@ import { Devices } from './pages/Devices.js';
 import { Voice } from './pages/Voice.js';
 import { Notifications } from './pages/Notifications.js';
 
+// V3 Pages
+import { AIProviders } from './pages/AIProviders.js';
+import { RAGKnowledge } from './pages/RAGKnowledge.js';
+import { WorkflowBuilder } from './pages/WorkflowBuilder.js';
+import { Observability } from './pages/Observability.js';
+import { Security } from './pages/Security.js';
+import { Policies } from './pages/Policies.js';
+import { Logs } from './pages/Logs.js';
+
 export const App: React.FC = () => {
   const { activeTab, initialize } = useClawForgeStore();
 
@@ -71,6 +80,23 @@ export const App: React.FC = () => {
         return <Browser />;
       case 'settings':
         return <Settings />;
+
+      // V3 View Cases
+      case 'ai_providers':
+        return <AIProviders />;
+      case 'rag_knowledge':
+        return <RAGKnowledge />;
+      case 'workflow_builder':
+        return <WorkflowBuilder />;
+      case 'observability':
+        return <Observability />;
+      case 'security':
+        return <Security />;
+      case 'policies':
+        return <Policies />;
+      case 'logs':
+        return <Logs />;
+
       default:
         return <Dashboard />;
     }

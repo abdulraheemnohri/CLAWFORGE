@@ -221,6 +221,83 @@ export function initDb() {
       execution_logs_json TEXT,
       created_at INTEGER NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS usersettings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS agents (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      type TEXT NOT NULL,
+      role TEXT NOT NULL,
+      description TEXT,
+      system_prompt TEXT,
+      config_json TEXT,
+      enabled INTEGER NOT NULL,
+      created_at INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS workflow_runs (
+      id TEXT PRIMARY KEY,
+      workflow_id TEXT NOT NULL REFERENCES workflows(id) ON DELETE CASCADE,
+      trigger_type TEXT NOT NULL,
+      status TEXT NOT NULL,
+      logs_json TEXT,
+      duration_ms INTEGER,
+      created_at INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS documents (
+      id TEXT PRIMARY KEY,
+      collection_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      type TEXT NOT NULL,
+      path TEXT,
+      size INTEGER,
+      status TEXT NOT NULL,
+      parsed_text TEXT,
+      chunk_count INTEGER NOT NULL,
+      created_at INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS embeddings (
+      id TEXT PRIMARY KEY,
+      document_id TEXT NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+      chunk_index INTEGER NOT NULL,
+      text TEXT NOT NULL,
+      vector_json TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS policies (
+      id TEXT PRIMARY KEY,
+      entity_type TEXT NOT NULL,
+      entity_id TEXT NOT NULL,
+      operation TEXT NOT NULL,
+      policy_level TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS metrics (
+      id TEXT PRIMARY KEY,
+      key TEXT NOT NULL,
+      value TEXT NOT NULL,
+      timestamp INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS traces (
+      id TEXT PRIMARY KEY,
+      task_id TEXT REFERENCES tasks(id) ON DELETE CASCADE,
+      step_name TEXT NOT NULL,
+      entity_type TEXT NOT NULL,
+      entity_name TEXT NOT NULL,
+      input TEXT,
+      output TEXT,
+      duration_ms INTEGER,
+      created_at INTEGER NOT NULL
+    );
   `);
 
   // Indexes

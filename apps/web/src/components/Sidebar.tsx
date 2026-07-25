@@ -20,7 +20,12 @@ import {
   Shield,
   Mic,
   Bell,
-  Workflow
+  Workflow,
+  BookOpen,
+  Network,
+  BarChart3,
+  ShieldAlert,
+  ClipboardList
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
@@ -49,6 +54,16 @@ export const Sidebar: React.FC = () => {
     { id: 'devices', label: 'Paired Devices', icon: Shield },
     { id: 'voice', label: 'Voice Assistant', icon: Mic },
     { id: 'notifications', label: 'Notifications', icon: Bell },
+
+    // V3 Menu Additions
+    { id: 'ai_providers', label: 'AI Providers', icon: Cpu },
+    { id: 'rag_knowledge', label: 'RAG Knowledge', icon: BookOpen },
+    { id: 'workflow_builder', label: 'Workflow Builder', icon: Network },
+    { id: 'observability', label: 'Observability', icon: BarChart3 },
+    { id: 'security', label: 'Security Vault', icon: Shield },
+    { id: 'policies', label: 'Policy Engine', icon: ShieldAlert },
+    { id: 'logs', label: 'Audit Logs', icon: ClipboardList },
+
     { id: 'terminal', label: 'Terminal', icon: Terminal },
     { id: 'browser', label: 'Browser', icon: Globe },
     { id: 'settings', label: 'Settings', icon: Settings },
@@ -105,7 +120,7 @@ export const Sidebar: React.FC = () => {
       <div className="p-4 border-t border-gray-800 text-xs text-gray-500 flex flex-col gap-1">
         <div className="flex justify-between">
           <span>Engine version</span>
-          <span className="font-mono text-gray-400">v1.0.0</span>
+          <span className="font-mono text-gray-400">v3.0.0</span>
         </div>
         <div className="flex justify-between">
           <span>Local session</span>

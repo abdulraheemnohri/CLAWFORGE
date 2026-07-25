@@ -57,7 +57,7 @@ export const Notifications: React.FC = () => {
         {/* Left Column: Notifications Audit Logs */}
         <div className="lg:col-span-2 space-y-4">
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-            <div className="flex justify-between items-center mb-4pb-2 border-b border-gray-800 pb-3">
+            <div className="flex justify-between items-center mb-4 pb-2 border-b border-gray-800 pb-3">
               <div className="flex items-center gap-2">
                 <span className="font-bold text-gray-100 text-sm">System Alerts Feed</span>
                 <span className="text-[10px] bg-orange-600/10 text-orange-400 border border-orange-500/15 px-1.5 py-0.5 rounded font-mono">
