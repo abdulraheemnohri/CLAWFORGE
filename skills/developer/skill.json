@@ -1,0 +1,7 @@
+{
+  "packageName": "@clawforge/skill-developer",
+  "title": "Full Stack Senior Developer Package",
+  "version": "3.0.0",
+  "description": "Upgrades ClawForge runtime with advanced refactoring, TypeScript types generation, and Playwright verification.",
+  "enabled": true
+}

@@ -1,0 +1,7 @@
+Input:
+legacy function: function add(a,b) { return a+b; }
+
+Output:
+export const add = (a: number, b: number): number => {
+  return a + b;
+};

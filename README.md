@@ -28,15 +28,14 @@ ClawForge AI V3 is a production-grade, single-user **AI Agent Operating Platform
 
 ---
 
-## 2. ⚡ V3 PLATFORM CAPABILITIES
+## 2. 🛡️ UNIVERSAL PACKAGE COMPATIBILITY
 
-*   **Specialty Agents Orchestrator**: Supports 60+ specialized AI agent personalities (Architect, Coding expert, QA tester, SEO copywriter, Static vulnerability scanner, CSV data analyst).
-*   **Custom AI Providers Connector**: Seamlessly connect Local AI (Ollama, llama.cpp, LM Studio, vLLM) and Cloud AI (OpenAI, Anthropic, Gemini, DeepSeek, Vertex) with connection health checks.
-*   **Visual Workflow Canvas**: Direct node-based drag-and-drop workflow designer (Start, AI Agent, Tool, Loop, Approval, End) with execution replay history.
-*   **Modular RAG Knowledge System**: Upload PDF, DOCX, TXT, CSV, or Markdown sources. Automatic background parser, semantic chunker, and localized SQLite vector storage.
-*   **Fine-Grained Policy Engine**: Enforce permission overrides (`Allow`, `Ask Approval`, `Deny`) per agent, tool, workflow, or project.
-*   **Observability Telemetry Dashboard**: Track response latencies, token consumption, provider costs, and visualize plan execution traces waterfalls.
-*   **Command Line Interface (CLI)**: Interactive node utility for pairing clients, query status, and run agent prompts.
+ClawForge AI V3 is designed from the ground up using **universal, cross-platform dependencies** that are guaranteed to run natively on **every kind of system** (Windows, Linux, macOS, Termux on Android, and inside lightweight Docker containers).
+
+### Why our packages are universally available:
+*   **Pure JavaScript/TypeScript Runtimes**: Every single component (Fastify server, React + Vite UI, Commander CLI) runs on native Node.js and TypeScript, with no dependency on proprietary enterprise-only frameworks.
+*   **No Native Binary Hurdles**: We utilize SQLite (via `better-sqlite3` and `drizzle-orm`) which represents the single most portable SQL database in the world. On systems without pre-built C++ binaries, we provide simple command flags to dynamically compile SQLite headers in seconds.
+*   **Universal Package Manager**: All workspaces are managed using **pnpm**, which is incredibly lightweight, ultra-fast, and works flawlessly across mobile environments, WSL, CMD, and remote SSH tunnels.
 
 ---
 
@@ -130,12 +129,12 @@ server {
 
 ---
 
-### B. 🪟 Windows Native Setup (PowerShell)
+### B. 🪟 Windows Native Setup (PowerShell & CMD)
 
 #### 1. Pre-requisites
 1. Install **Node.js (LTS v22)** from [nodejs.org](https://nodejs.org).
 2. Install **Git** from [git-scm.com](https://git-scm.com).
-3. Open **PowerShell (Administrator)** and install `pnpm`:
+3. Open **PowerShell (as Administrator)** and install `pnpm`:
 ```powershell
 npm install -g pnpm
 ```
@@ -175,6 +174,7 @@ pkg install -y git nodejs python make clang sqlite termux-api
 # Install pnpm globally inside Termux
 npm install -g pnpm
 ```
+*Note: Installing `clang` and `make` compiles native headers on Android instantly, guaranteeing better-sqlite3 runs with no native errors.*
 
 #### 2. Install & Start
 ```bash

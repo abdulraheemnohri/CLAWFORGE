@@ -150,11 +150,37 @@ importers:
         specifier: ^2.1.5
         version: 2.1.9(@types/node@22.20.1)
 
+  packages/agent-core:
+    dependencies:
+      '@clawforge/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
+    devDependencies:
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
   packages/agent-protocol:
     dependencies:
       '@clawforge/shared':
         specifier: workspace:*
         version: link:../shared
+    devDependencies:
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  packages/agent-sdk:
+    dependencies:
+      '@clawforge/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
+    devDependencies:
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  packages/ai-provider-sdk:
     devDependencies:
       typescript:
         specifier: ^5.7.2
@@ -172,7 +198,47 @@ importers:
         specifier: ^5.7.2
         version: 5.9.3
 
+  packages/observability:
+    dependencies:
+      '@clawforge/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
+    devDependencies:
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  packages/plugin-sdk:
+    devDependencies:
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  packages/policy-engine:
+    devDependencies:
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  packages/rag-engine:
+    devDependencies:
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
   packages/shared:
+    devDependencies:
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  packages/shared-types:
+    devDependencies:
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  packages/skill-sdk:
     devDependencies:
       typescript:
         specifier: ^5.7.2
@@ -186,6 +252,16 @@ importers:
       zod:
         specifier: ^3.23.8
         version: 3.25.76
+    devDependencies:
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  packages/workflow-engine:
+    dependencies:
+      '@clawforge/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
     devDependencies:
       typescript:
         specifier: ^5.7.2
