@@ -67,6 +67,16 @@ interface ClawForgeState {
   voiceConfig: any;
   wakewordConfig: any;
 
+  // V3 Collections
+  v3Agents: any[];
+  v3Providers: any[];
+  v3Models: any[];
+  v3Documents: any[];
+  v3WorkflowRuns: any[];
+  v3Metrics: any[];
+  v3Traces: any[];
+  v3Policies: any[];
+
   // Actions
   initialize: () => Promise<void>;
   loadProjectData: (projectId: string) => Promise<void>;
@@ -115,6 +125,29 @@ interface ClawForgeState {
   fetchVoiceAndWakeword: () => Promise<void>;
   saveVoiceConfig: (config: any) => Promise<void>;
   saveWakewordConfig: (config: any) => Promise<void>;
+
+  // V3 Actions
+  fetchV3Agents: () => Promise<void>;
+  addV3Agent: (name: string, type: string, role: string, desc: string, systemPrompt: string) => Promise<void>;
+  toggleV3Agent: (id: string, enabled: boolean) => Promise<void>;
+  deleteV3Agent: (id: string) => Promise<void>;
+  fetchV3Providers: () => Promise<void>;
+  addV3Provider: (name: string, type: string, baseUrl: string, apiKey: string) => Promise<void>;
+  deleteV3Provider: (id: string) => Promise<void>;
+  fetchV3Models: () => Promise<void>;
+  addV3Model: (name: string, providerId: string, config: any) => Promise<void>;
+  deleteV3Model: (id: string) => Promise<void>;
+  fetchV3Documents: () => Promise<void>;
+  uploadV3Document: (name: string, type: string, collectionId: string) => Promise<void>;
+  deleteV3Document: (id: string) => Promise<void>;
+  queryV3Rag: (query: string) => Promise<any>;
+  fetchV3WorkflowRuns: () => Promise<void>;
+  triggerV3Workflow: (id: string) => Promise<void>;
+  fetchV3Observability: () => Promise<void>;
+  fetchV3Policies: () => Promise<void>;
+  addV3Policy: (entityType: string, entityId: string, operation: string, level: string) => Promise<void>;
+  updateV3PolicyLevel: (id: string, level: string) => Promise<void>;
+  deleteV3Policy: (id: string) => Promise<void>;
 }
 
 const API_BASE = 'http://127.0.0.1:3777/api';
@@ -192,6 +225,14 @@ export const useClawForgeStore = create<ClawForgeState>((set, get) => ({
   plugins: [],
   pairedDevices: [],
   workflows: [],
+  v3Agents: [],
+  v3Providers: [],
+  v3Models: [],
+  v3Documents: [],
+  v3WorkflowRuns: [],
+  v3Metrics: [],
+  v3Traces: [],
+  v3Policies: [],
   voiceConfig: {
     speechEngine: 'Local DeepSpeech',
     continuousConversation: true,
@@ -256,6 +297,15 @@ export const useClawForgeStore = create<ClawForgeState>((set, get) => ({
       await get().fetchDevices().catch(() => {});
       await get().fetchWorkflows().catch(() => {});
       await get().fetchVoiceAndWakeword().catch(() => {});
+
+      // V3 Load data
+      await get().fetchV3Agents().catch(() => {});
+      await get().fetchV3Providers().catch(() => {});
+      await get().fetchV3Models().catch(() => {});
+      await get().fetchV3Documents().catch(() => {});
+      await get().fetchV3WorkflowRuns().catch(() => {});
+      await get().fetchV3Observability().catch(() => {});
+      await get().fetchV3Policies().catch(() => {});
 
       // 6. Connect WS
       get().connectWebSocket();
@@ -1030,6 +1080,241 @@ export const useClawForgeStore = create<ClawForgeState>((set, get) => ({
     } catch (err) {
       console.error('Error saving wakeword config:', err);
       set({ wakewordConfig: config });
+    }
+  },
+
+  // V3 Actions Implementation
+  fetchV3Agents: async () => {
+    try {
+      const data = await apiFetch('/v3/agents');
+      set({ v3Agents: data });
+    } catch (err) {
+      console.error('Error fetching V3 Agents:', err);
+    }
+  },
+
+  addV3Agent: async (name, type, role, desc, systemPrompt) => {
+    try {
+      const newAgent = await apiFetch('/v3/agents', {
+        method: 'POST',
+        body: JSON.stringify({ name, type, role, description: desc, systemPrompt })
+      });
+      set((state) => ({ v3Agents: [...state.v3Agents, newAgent] }));
+    } catch (err) {
+      console.error('Error adding V3 Agent:', err);
+    }
+  },
+
+  toggleV3Agent: async (id, enabled) => {
+    try {
+      const updated = await apiFetch(`/v3/agents/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ enabled })
+      });
+      set((state) => ({
+        v3Agents: state.v3Agents.map((a) => a.id === id ? updated : a)
+      }));
+    } catch (err) {
+      console.error('Error toggling V3 Agent:', err);
+      set((state) => ({
+        v3Agents: state.v3Agents.map((a) => a.id === id ? { ...a, enabled } : a)
+      }));
+    }
+  },
+
+  deleteV3Agent: async (id) => {
+    try {
+      await apiFetch(`/v3/agents/${id}`, { method: 'DELETE' });
+      set((state) => ({ v3Agents: state.v3Agents.filter((a) => a.id !== id) }));
+    } catch (err) {
+      console.error('Error deleting V3 Agent:', err);
+    }
+  },
+
+  fetchV3Providers: async () => {
+    try {
+      const data = await apiFetch('/v3/providers');
+      set({ v3Providers: data });
+    } catch (err) {
+      console.error('Error fetching V3 Providers:', err);
+    }
+  },
+
+  addV3Provider: async (name, type, baseUrl, apiKey) => {
+    try {
+      const newProv = await apiFetch('/v3/providers', {
+        method: 'POST',
+        body: JSON.stringify({ name, type, baseUrl, apiKey })
+      });
+      set((state) => ({ v3Providers: [...state.v3Providers, newProv] }));
+    } catch (err) {
+      console.error('Error adding V3 Provider:', err);
+    }
+  },
+
+  deleteV3Provider: async (id) => {
+    try {
+      await apiFetch(`/v3/providers/${id}`, { method: 'DELETE' });
+      set((state) => ({ v3Providers: state.v3Providers.filter((p) => p.id !== id) }));
+    } catch (err) {
+      console.error('Error deleting V3 Provider:', err);
+    }
+  },
+
+  fetchV3Models: async () => {
+    try {
+      const data = await apiFetch('/v3/models');
+      set({ v3Models: data });
+    } catch (err) {
+      console.error('Error fetching V3 Models:', err);
+    }
+  },
+
+  addV3Model: async (name, providerId, config) => {
+    try {
+      const newModel = await apiFetch('/v3/models', {
+        method: 'POST',
+        body: JSON.stringify({ name, providerId, config })
+      });
+      set((state) => ({ v3Models: [...state.v3Models, newModel] }));
+    } catch (err) {
+      console.error('Error adding V3 Model:', err);
+    }
+  },
+
+  deleteV3Model: async (id) => {
+    try {
+      await apiFetch(`/v3/models/${id}`, { method: 'DELETE' });
+      set((state) => ({ v3Models: state.v3Models.filter((m) => m.id !== id) }));
+    } catch (err) {
+      console.error('Error deleting V3 Model:', err);
+    }
+  },
+
+  fetchV3Documents: async () => {
+    try {
+      const data = await apiFetch('/v3/rag/documents');
+      set({ v3Documents: data });
+    } catch (err) {
+      console.error('Error fetching V3 RAG Documents:', err);
+    }
+  },
+
+  uploadV3Document: async (name, type, collectionId) => {
+    try {
+      const newDoc = await apiFetch('/v3/rag/documents', {
+        method: 'POST',
+        body: JSON.stringify({ name, type, collectionId })
+      });
+      set((state) => ({ v3Documents: [...state.v3Documents, newDoc] }));
+
+      // Periodically refresh document status to catch when parsing completes
+      setTimeout(() => {
+        get().fetchV3Documents();
+      }, 2000);
+    } catch (err) {
+      console.error('Error uploading document:', err);
+    }
+  },
+
+  deleteV3Document: async (id) => {
+    try {
+      await apiFetch(`/v3/rag/documents/${id}`, { method: 'DELETE' });
+      set((state) => ({ v3Documents: state.v3Documents.filter((d) => d.id !== id) }));
+    } catch (err) {
+      console.error('Error deleting RAG Document:', err);
+    }
+  },
+
+  queryV3Rag: async (query) => {
+    try {
+      const res = await apiFetch('/v3/rag/query', {
+        method: 'POST',
+        body: JSON.stringify({ query, collectionId: 'default' })
+      });
+      return res;
+    } catch (err) {
+      console.error('Error querying RAG:', err);
+      return { results: [] };
+    }
+  },
+
+  fetchV3WorkflowRuns: async () => {
+    try {
+      const data = await apiFetch('/v3/workflow_runs');
+      set({ v3WorkflowRuns: data });
+    } catch (err) {
+      console.error('Error fetching workflow runs:', err);
+    }
+  },
+
+  triggerV3Workflow: async (id) => {
+    try {
+      const newRun = await apiFetch(`/v3/workflows/${id}/run`, { method: 'POST' });
+      set((state) => ({
+        v3WorkflowRuns: [newRun, ...state.v3WorkflowRuns]
+      }));
+      // Also update standard workflows list metrics count
+      await get().fetchWorkflows();
+    } catch (err) {
+      console.error('Error triggering V3 Workflow run:', err);
+    }
+  },
+
+  fetchV3Observability: async () => {
+    try {
+      const metrics = await apiFetch('/v3/observability/metrics');
+      const traces = await apiFetch('/v3/observability/traces');
+      set({ v3Metrics: metrics, v3Traces: traces });
+    } catch (err) {
+      console.error('Error fetching observability telemetry:', err);
+    }
+  },
+
+  fetchV3Policies: async () => {
+    try {
+      const data = await apiFetch('/v3/policies');
+      set({ v3Policies: data });
+    } catch (err) {
+      console.error('Error fetching policies:', err);
+    }
+  },
+
+  addV3Policy: async (entityType, entityId, operation, level) => {
+    try {
+      const newPol = await apiFetch('/v3/policies', {
+        method: 'POST',
+        body: JSON.stringify({ entityType, entityId, operation, policyLevel: level })
+      });
+      set((state) => ({ v3Policies: [...state.v3Policies, newPol] }));
+    } catch (err) {
+      console.error('Error adding V3 Policy:', err);
+    }
+  },
+
+  updateV3PolicyLevel: async (id, level) => {
+    try {
+      const updated = await apiFetch(`/v3/policies/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ policyLevel: level })
+      });
+      set((state) => ({
+        v3Policies: state.v3Policies.map((p) => p.id === id ? updated : p)
+      }));
+    } catch (err) {
+      console.error('Error updating policy level:', err);
+      set((state) => ({
+        v3Policies: state.v3Policies.map((p) => p.id === id ? { ...p, policyLevel: level } : p)
+      }));
+    }
+  },
+
+  deleteV3Policy: async (id) => {
+    try {
+      await apiFetch(`/v3/policies/${id}`, { method: 'DELETE' });
+      set((state) => ({ v3Policies: state.v3Policies.filter((p) => p.id !== id) }));
+    } catch (err) {
+      console.error('Error deleting policy:', err);
     }
   }
 }));
