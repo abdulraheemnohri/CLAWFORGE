@@ -20,6 +20,7 @@ export const Dashboard: React.FC = () => {
     activeProjectId,
     setActiveProjectId,
     addProject,
+    updateProject,
     tasks,
     submitChat,
     setActiveTab,
@@ -28,6 +29,7 @@ export const Dashboard: React.FC = () => {
   } = useClawForgeStore();
 
   const [prompt, setPrompt] = useState('');
+  const activeProj = projects.find(p => p.id === activeProjectId);
   const [newProjName, setNewProjName] = useState('');
   const [showProjModal, setShowProjModal] = useState(false);
 
@@ -94,10 +96,18 @@ export const Dashboard: React.FC = () => {
 
             <div className="flex items-center gap-1.5">
               <span>Model:</span>
-              <select className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-gray-200 outline-none focus:border-orange-500">
-                <option value="ollama-llama">Ollama (Llama 3)</option>
-                <option value="openai-gpt">OpenAI (GPT-4o)</option>
-                <option value="mock-model">Simulated Core Engine</option>
+              <select
+                value={activeProj?.aiModel || 'mock'}
+                onChange={(e) => {
+                  if (activeProjectId) {
+                    updateProject(activeProjectId, { aiModel: e.target.value });
+                  }
+                }}
+                className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-gray-200 outline-none focus:border-orange-500"
+              >
+                <option value="ollama/llama3">Ollama (Llama 3)</option>
+                <option value="openai/gpt-4o">OpenAI (GPT-4o)</option>
+                <option value="mock">Simulated Core Engine</option>
               </select>
             </div>
           </div>

@@ -15,6 +15,7 @@ import { Approvals } from './pages/Approvals.js';
 import { Terminal } from './pages/Terminal.js';
 import { Browser } from './pages/Browser.js';
 import { Settings } from './pages/Settings.js';
+import { Projects } from './pages/Projects.js';
 
 export const App: React.FC = () => {
   const { activeTab, initialize } = useClawForgeStore();
@@ -29,6 +30,8 @@ export const App: React.FC = () => {
         return <Dashboard />;
       case 'chat':
         return <Chat />;
+      case 'projects':
+        return <Projects />;
       case 'tasks':
         return <Tasks />;
       case 'agents':
