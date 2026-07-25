@@ -13,7 +13,14 @@ import {
   Terminal,
   Globe,
   Settings,
-  CircleDot
+  CircleDot,
+  Award,
+  Server,
+  ToyBrick,
+  Shield,
+  Mic,
+  Bell,
+  Workflow
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
@@ -35,6 +42,13 @@ export const Sidebar: React.FC = () => {
       icon: UserCheck,
       badge: pendingApprovalsCount > 0 ? pendingApprovalsCount : undefined
     },
+    { id: 'skills', label: 'Skills', icon: Award },
+    { id: 'mcp', label: 'MCP Connectors', icon: Server },
+    { id: 'automation', label: 'Automation', icon: Workflow },
+    { id: 'plugins', label: 'Plugins', icon: ToyBrick },
+    { id: 'devices', label: 'Paired Devices', icon: Shield },
+    { id: 'voice', label: 'Voice Assistant', icon: Mic },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'terminal', label: 'Terminal', icon: Terminal },
     { id: 'browser', label: 'Browser', icon: Globe },
     { id: 'settings', label: 'Settings', icon: Settings },

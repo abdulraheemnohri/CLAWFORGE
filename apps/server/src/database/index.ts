@@ -163,6 +163,64 @@ export function initDb() {
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS skills (
+      id TEXT PRIMARY KEY,
+      package_name TEXT NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT,
+      version TEXT NOT NULL,
+      enabled INTEGER NOT NULL,
+      skill_json TEXT NOT NULL,
+      instructions TEXT,
+      created_at INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS mcp_servers (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      description TEXT,
+      version TEXT,
+      status TEXT NOT NULL,
+      url TEXT,
+      tools_json TEXT,
+      permissions_json TEXT,
+      enabled INTEGER NOT NULL,
+      created_at INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS plugins (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      description TEXT,
+      version TEXT NOT NULL,
+      status TEXT NOT NULL,
+      enabled INTEGER NOT NULL,
+      permissions_json TEXT,
+      manifest_json TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS paired_devices (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      type TEXT NOT NULL,
+      pairing_code TEXT NOT NULL,
+      status TEXT NOT NULL,
+      last_connected_at INTEGER,
+      created_at INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS workflows (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      trigger_type TEXT NOT NULL,
+      condition TEXT,
+      status TEXT NOT NULL,
+      metrics_json TEXT,
+      execution_logs_json TEXT,
+      created_at INTEGER NOT NULL
+    );
   `);
 
   // Indexes

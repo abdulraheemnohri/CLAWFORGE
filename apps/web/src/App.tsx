@@ -16,6 +16,13 @@ import { Terminal } from './pages/Terminal.js';
 import { Browser } from './pages/Browser.js';
 import { Settings } from './pages/Settings.js';
 import { Projects } from './pages/Projects.js';
+import { Skills } from './pages/Skills.js';
+import { MCP } from './pages/MCP.js';
+import { Automation } from './pages/Automation.js';
+import { Plugins } from './pages/Plugins.js';
+import { Devices } from './pages/Devices.js';
+import { Voice } from './pages/Voice.js';
+import { Notifications } from './pages/Notifications.js';
 
 export const App: React.FC = () => {
   const { activeTab, initialize } = useClawForgeStore();
@@ -44,6 +51,20 @@ export const App: React.FC = () => {
         return <Memory />;
       case 'approvals':
         return <Approvals />;
+      case 'skills':
+        return <Skills />;
+      case 'mcp':
+        return <MCP />;
+      case 'automation':
+        return <Automation />;
+      case 'plugins':
+        return <Plugins />;
+      case 'devices':
+        return <Devices />;
+      case 'voice':
+        return <Voice />;
+      case 'notifications':
+        return <Notifications />;
       case 'terminal':
         return <Terminal />;
       case 'browser':

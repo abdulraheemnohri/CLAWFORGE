@@ -148,3 +148,61 @@ export const settings = sqliteTable('settings', {
   key: text('key').primaryKey(),
   value: text('value').notNull() // JSON string
 });
+
+export const skills = sqliteTable('skills', {
+  id: text('id').primaryKey(),
+  packageName: text('package_name').notNull(),
+  title: text('title').notNull(),
+  description: text('description'),
+  version: text('version').notNull(),
+  enabled: integer('enabled', { mode: 'boolean' }).notNull(),
+  skillJson: text('skill_json').notNull(), // config
+  instructions: text('instructions'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull()
+});
+
+export const mcpServers = sqliteTable('mcp_servers', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  description: text('description'),
+  version: text('version'),
+  status: text('status').notNull(), // 'connected' | 'disconnected' | 'error'
+  url: text('url'),
+  toolsJson: text('tools_json'), // JSON string list of tools
+  permissionsJson: text('permissions_json'), // JSON string required permissions
+  enabled: integer('enabled', { mode: 'boolean' }).notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull()
+});
+
+export const plugins = sqliteTable('plugins', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  description: text('description'),
+  version: text('version').notNull(),
+  status: text('status').notNull(), // 'installed' | 'uninstalled'
+  enabled: integer('enabled', { mode: 'boolean' }).notNull(),
+  permissionsJson: text('permissions_json'), // JSON string list of permissions
+  manifestJson: text('manifest_json').notNull(), // manifest metadata JSON
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull()
+});
+
+export const pairedDevices = sqliteTable('paired_devices', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  type: text('type').notNull(), // 'desktop' | 'cli' | 'android' | 'web'
+  pairingCode: text('pairing_code').notNull(),
+  status: text('status').notNull(), // 'paired' | 'revoked' | 'pending'
+  lastConnectedAt: integer('last_connected_at', { mode: 'timestamp' }),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull()
+});
+
+export const workflows = sqliteTable('workflows', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  triggerType: text('trigger_type').notNull(), // 'schedule' | 'file_created' | 'webhook' | 'git_commit' | 'manual' | 'voice'
+  condition: text('condition'),
+  status: text('status').notNull(), // 'active' | 'paused'
+  metricsJson: text('metrics_json'), // metrics log summary (totalRuns, failures, success)
+  executionLogsJson: text('execution_logs_json'), // execution history logs JSON list
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull()
+});

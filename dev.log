@@ -1,0 +1,29 @@
+
+> clawforge-ai@1.0.0 dev /app
+> turbo run dev --parallel
+
+ WARNING  --parallel is deprecated and will be removed in a future major version. Instead, define task behavior in your turbo.json task definitions using `persistent` and `with`.
+• turbo 2.10.6
+
+   • Packages in scope: @clawforge/agent-protocol, @clawforge/ai-sdk, @clawforge/config, @clawforge/shared, @clawforge/tool-sdk, server, web
+   • Running dev in 7 packages
+   • Remote caching disabled
+
+web:dev: cache bypass, force executing 4d217d30d0c94cc7
+server:dev: cache bypass, force executing 6378c48170b4613f
+server:dev:
+server:dev: > server@1.0.0 dev /app/apps/server
+server:dev: > tsx watch src/index.ts
+server:dev:
+web:dev:
+web:dev: > web@1.0.0 dev /app/apps/web
+web:dev: > vite
+web:dev:
+web:dev:
+web:dev:   VITE v6.4.3  ready in 202 ms
+web:dev:
+web:dev:   ➜  Local:   http://127.0.0.1:5173/
+server:dev: 🦅 ClawForge Server running at http://127.0.0.1:3777
+server:dev: 2:02:10 PM [tsx] change in ./src/api/routes.ts Restarting...
+server:dev: SIGTERM received. Cleaning up...
+server:dev: 🦅 ClawForge Server running at http://127.0.0.1:3777
